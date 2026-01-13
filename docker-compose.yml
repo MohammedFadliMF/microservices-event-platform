@@ -1,0 +1,201 @@
+services:
+  event-discovery-service:
+    build: ./discovery-service
+    container_name: event-discovery-service
+    ports:
+      - "8761:8761"
+    expose:
+      - "8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      retries: 4
+  event-config-service:
+    build: ./config-service
+    container_name: event-config-service
+    ports:
+      - "9999:9999"
+    expose:
+      - "9999"
+    environment:
+      - DISCOVERY_SERVICE_URL=http://event-discovery-service:8761/eureka
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9999/actuator/health"]
+      interval: 10s
+      retries: 4
+    depends_on:
+      event-discovery-service:
+        condition: service_healthy
+  event-user-service:
+    build: ./user-service
+    container_name: event-user-service
+    ports:
+      - "8081:8081"
+    expose:
+      - "8081"
+    environment:
+      - DISCOVERY_SERVICE_URL=http://event-discovery-service:8761/eureka
+      - CONFIG_SERVICE_URL=http://event-config-service:9999
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      retries: 4
+    depends_on:
+      event-config-service:
+        condition: service_healthy
+      user-db:
+        condition: service_healthy
+  event-event-service:
+    build: ./event-service
+    container_name: event-event-service
+    ports:
+      - "8082:8082"
+    expose:
+      - "8082"
+    environment:
+      - DISCOVERY_SERVICE_URL=http://event-discovery-service:8761/eureka
+      - CONFIG_SERVICE_URL=http://event-config-service:9999
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 10s
+      retries: 4
+    depends_on:
+      event-user-service:
+        condition: service_healthy
+      event-db:
+        condition: service_healthy
+  event-ticket-service:
+    build: ./ticket-service
+    container_name: event-ticket-service
+    ports:
+      - "8083:8083"
+    expose:
+      - "8083"
+    environment:
+      - DISCOVERY_SERVICE_URL=http://event-discovery-service:8761/eureka
+      - CONFIG_SERVICE_URL=http://event-config-service:9999
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 10s
+      retries: 4
+    depends_on:
+      event-event-service:
+        condition: service_healthy
+      ticket-db:
+        condition: service_healthy
+  event-payment-service:
+    build: ./payment-service
+    container_name: event-payment-service
+    ports:
+      - "8084:8084"
+    expose:
+      - "8084"
+    environment:
+      - DISCOVERY_SERVICE_URL=http://event-discovery-service:8761/eureka
+      - CONFIG_SERVICE_URL=http://event-config-service:9999
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 10s
+      retries: 4
+    depends_on:
+      event-ticket-service:
+        condition: service_healthy
+      payment-db:
+        condition: service_healthy
+  event-gateway-service:
+    build: ./gateway-service
+    container_name: event-gateway-service
+    ports:
+      - "8888:8888"
+    expose:
+      - "8888"
+    environment:
+      - DISCOVERY_SERVICE_URL=http://event-discovery-service:8761/eureka
+      - CONFIG_SERVICE_URL=http://event-config-service:9999
+    depends_on:
+      event-config-service:
+        condition: service_healthy
+
+
+  # Databases (PostgreSQL)
+  user-db:
+    image: postgres:15-alpine
+    container_name: user-db
+    environment:
+      POSTGRES_DB: userdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user -d userdb" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  event-db:
+    image: postgres:15-alpine
+    container_name: event-db
+    environment:
+      POSTGRES_DB: eventdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - event-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user -d userdb" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  ticket-db:
+    image: postgres:15-alpine
+    container_name: ticket-db
+    environment:
+      POSTGRES_DB: ticketdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5434:5432"
+    volumes:
+      - ticket-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user -d userdb" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  payment-db:
+    image: postgres:15-alpine
+    container_name: payment-db
+    environment:
+      POSTGRES_DB: paymentdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5435:5432"
+    volumes:
+      - payment-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user -d userdb" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  user-db-data:
+    driver: local
+  event-db-data:
+    driver: local
+  ticket-db-data:
+    driver: local
+  payment-db-data:
+    driver: local
