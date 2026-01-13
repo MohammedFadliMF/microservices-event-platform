@@ -148,7 +148,7 @@ services:
     volumes:
       - event-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U user -d userdb" ]
+      test: [ "CMD-SHELL", "pg_isready -U user -d eventdb" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -166,7 +166,7 @@ services:
     volumes:
       - ticket-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U user -d userdb" ]
+      test: [ "CMD-SHELL", "pg_isready -U user -d ticketdb" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -184,7 +184,7 @@ services:
     volumes:
       - payment-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U user -d userdb" ]
+      test: [ "CMD-SHELL", "pg_isready -U user -d paymentdb" ]
       interval: 10s
       timeout: 5s
       retries: 5
