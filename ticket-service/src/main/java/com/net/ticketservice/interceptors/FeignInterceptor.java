@@ -1,4 +1,4 @@
-package com.net.eventservice.interceptors;
+package com.net.ticketservice.interceptors;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
