@@ -1,3 +1,4 @@
+/*
 package com.net.ticketservice.config;
 
 import org.springframework.context.annotation.Bean;
@@ -13,9 +14,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class OAuth2ClientConfig {
 
-    /**
-     * Manager pour gérer les tokens OAuth2 (Client Credentials Flow)
-     */
+    
     @Bean
     public OAuth2AuthorizedClientManager authorizedClientManager(
             ClientRegistrationRepository clientRegistrationRepository,
@@ -37,12 +36,10 @@ public class OAuth2ClientConfig {
         return authorizedClientManager;
     }
 
-    /**
-     * WebClient pour les appels REST inter-services avec OAuth2
-     * Utile si vous n'utilisez pas Feign
-     */
+    
     @Bean
     public WebClient webClient() {
         return WebClient.builder().build();
     }
 }
+*/

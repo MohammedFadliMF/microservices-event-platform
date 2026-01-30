@@ -1,4 +1,28 @@
 services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:21.1.1
+    container_name: keycloak
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloakdb
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+
+      KC_HOSTNAME: keycloak
+      KC_HOSTNAME_STRICT: true
+      KC_HTTP_ENABLED: true
+
+    ports:
+      - "8080:8080"
+    depends_on:
+      - keycloak-db
+    networks:
+      - event-network
+
   event-discovery-service:
     build: ./discovery-service
     container_name: event-discovery-service
@@ -7,9 +31,11 @@ services:
     expose:
       - "8761"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
       interval: 10s
+      timeout: 5s
       retries: 4
+      start_period: 60s
     networks:
       - event-network
   event-config-service:
@@ -22,33 +48,16 @@ services:
     environment:
       - DISCOVERY_SERVICE_URL=http://event-discovery-service:8761/eureka
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9999/actuator/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9999/actuator/health" ]
       interval: 10s
+      timeout: 5s
       retries: 4
+      start_period: 60s
     depends_on:
       event-discovery-service:
         condition: service_healthy
     networks:
       - event-network
-#  event-user-service:
-#    build: ./user-service
-#    container_name: event-user-service
-#    ports:
-#      - "8081:8081"
-#    expose:
-#      - "8081"
-#    environment:
-#      - DISCOVERY_SERVICE_URL=http://event-discovery-service:8761/eureka
-#      - CONFIG_SERVICE_URL=http://event-config-service:9999
-#    healthcheck:
-#      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
-#      interval: 10s
-#      retries: 4
-#    depends_on:
-#      event-config-service:
-#        condition: service_healthy
-#      user-db:
-#        condition: service_healthy
   event-event-service:
     build: ./event-service
     container_name: event-event-service
@@ -59,18 +68,22 @@ services:
     environment:
       - DISCOVERY_SERVICE_URL=http://event-discovery-service:8761/eureka
       - CONFIG_SERVICE_URL=http://event-config-service:9999
-      - KEYCLOAK_ISSUER_URI=http://localhost:8080/realms/event-platform-realm
-      - KEYCLOAK_JWK_SET_URI=http://localhost:8080/realms/event-platform-realm/protocol/openid-connect/certs
+      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/event-platform-realm
+      - KEYCLOAK_JWK_SET_URI=http://keycloak:8080/realms/event-platform-realm/protocol/openid-connect/certs
       - EVENT_SERVICE_CLIENT_SECRET=${EVENT_SERVICE_CLIENT_SECRET}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
       interval: 10s
+      timeout: 5s
       retries: 4
+      start_period: 90s
     depends_on:
       event-config-service:
         condition: service_healthy
       event-db:
         condition: service_healthy
+      keycloak:
+        condition: service_started
     networks:
       - event-network
   event-ticket-service:
@@ -83,13 +96,15 @@ services:
     environment:
       - DISCOVERY_SERVICE_URL=http://event-discovery-service:8761/eureka
       - CONFIG_SERVICE_URL=http://event-config-service:9999
-      - KEYCLOAK_ISSUER_URI=http://localhost:8080/realms/event-platform-realm
-      - KEYCLOAK_JWK_SET_URI=http://localhost:8080/realms/event-platform-realm/protocol/openid-connect/certs
+      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/event-platform-realm
+      - KEYCLOAK_JWK_SET_URI=http://keycloak:8080/realms/event-platform-realm/protocol/openid-connect/certs
       - TICKET_SERVICE_CLIENT_SECRET=${TICKET_SERVICE_CLIENT_SECRET}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
       interval: 10s
+      timeout: 5s
       retries: 4
+      start_period: 90s
     depends_on:
       event-event-service:
         condition: service_healthy
@@ -107,13 +122,15 @@ services:
     environment:
       - DISCOVERY_SERVICE_URL=http://event-discovery-service:8761/eureka
       - CONFIG_SERVICE_URL=http://event-config-service:9999
-      - KEYCLOAK_ISSUER_URI=http://localhost:8080/realms/event-platform-realm
-      - KEYCLOAK_JWK_SET_URI=http://localhost:8080/realms/event-platform-realm/protocol/openid-connect/certs
+      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/event-platform-realm
+      - KEYCLOAK_JWK_SET_URI=http://keycloak:8080/realms/event-platform-realm/protocol/openid-connect/certs
       - PAYMENT_SERVICE_CLIENT_SECRET=${PAYMENT_SERVICE_CLIENT_SECRET}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8084/actuator/health" ]
       interval: 10s
+      timeout: 5s
       retries: 4
+      start_period: 90s
     depends_on:
       event-ticket-service:
         condition: service_healthy
@@ -131,35 +148,14 @@ services:
     environment:
       - DISCOVERY_SERVICE_URL=http://event-discovery-service:8761/eureka
       - CONFIG_SERVICE_URL=http://event-config-service:9999
-      - KEYCLOAK_ISSUER_URI=http://localhost:8080/realms/event-platform-realm
-      - KEYCLOAK_JWK_SET_URI=http://localhost:8080/realms/event-platform-realm/protocol/openid-connect/certs
+      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/event-platform-realm
+      - KEYCLOAK_JWK_SET_URI=http://keycloak:8080/realms/event-platform-realm/protocol/openid-connect/certs
       - GATEWAY_CLIENT_SECRET=${GATEWAY_CLIENT_SECRET}
     depends_on:
       event-config-service:
         condition: service_healthy
     networks:
       - event-network
-
-
-  # Databases (PostgreSQL)
-#  user-db:
-#    image: postgres:15-alpine
-#    container_name: user-db
-#    environment:
-#      POSTGRES_DB: userdb
-#      POSTGRES_USER: user
-#      POSTGRES_PASSWORD: password
-#    ports:
-#      - "5432:5432"
-#    volumes:
-#      - user-db-data:/var/lib/postgresql/data
-#    healthcheck:
-#      test: [ "CMD-SHELL", "pg_isready -U user -d userdb" ]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
-#      start_period: 30s
-
   event-db:
     image: postgres:15-alpine
     container_name: event-db
@@ -172,7 +168,7 @@ services:
     volumes:
       - event-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U user -d eventdb" ]
+      test: ["CMD-SHELL", "pg_isready -U user -d eventdb"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -192,7 +188,7 @@ services:
     volumes:
       - ticket-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U user -d ticketdb" ]
+      test: ["CMD-SHELL", "pg_isready -U user -d ticketdb"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -212,7 +208,7 @@ services:
     volumes:
       - payment-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U user -d paymentdb" ]
+      test: ["CMD-SHELL", "pg_isready -U user -d paymentdb"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -220,9 +216,23 @@ services:
     networks:
       - event-network
 
+  keycloak-db:
+    image: postgres:15-alpine
+    container_name: keycloak-db
+    environment:
+      POSTGRES_DB: keycloakdb
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - keycloak-db-data:/var/lib/postgresql/data
+    ports:
+      - "5436:5432"
+    networks:
+      - event-network
+
 volumes:
-#  user-db-data:
-#    driver: local
+  keycloak-db-data:
+    driver: local
   event-db-data:
     driver: local
   ticket-db-data:
