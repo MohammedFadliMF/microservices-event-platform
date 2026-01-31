@@ -1,23 +1,40 @@
 package com.net.ticketservice.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.net.ticketservice.enums.TicketStatus;
+import com.net.ticketservice.enums.TicketType;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@AllArgsConstructor
-@NoArgsConstructor
-@Getter
+@Table(name = "tickets")
 @Setter
-@Builder
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Ticket {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long ticketId;
+    private Long id;
+
+    @Column(nullable = false)
     private Long eventId;
+
+    @Column(nullable = false)
     private Double price;
-    private String type;
-    private String status;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TicketType type;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TicketStatus status;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reservation_id")
+    private Reservation reservation;
+
+    @OneToOne(mappedBy = "ticket", cascade = CascadeType.ALL, orphanRemoval = true)
+    private TicketQR ticketQR;
 }
+
