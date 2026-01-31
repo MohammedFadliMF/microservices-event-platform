@@ -32,10 +32,7 @@ public class SecurityConfig {
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(ar -> ar
-<<<<<<< HEAD
-=======
                                                 .requestMatchers("/api/events/auth").permitAll()
->>>>>>> dev
                                                 .requestMatchers("/actuator/**").permitAll()
                                                 .requestMatchers("/actuator/health/**").permitAll()
                                                 .requestMatchers(
