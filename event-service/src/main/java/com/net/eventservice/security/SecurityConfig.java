@@ -32,6 +32,7 @@ public class SecurityConfig {
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(ar -> ar
+                                                .requestMatchers("/api/events/auth").permitAll()
                                                 .requestMatchers("/actuator/**").permitAll()
                                                 .requestMatchers("/actuator/health/**").permitAll()
                                                 .requestMatchers(
