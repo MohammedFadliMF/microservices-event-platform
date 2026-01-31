@@ -1,18 +1,23 @@
 package com.net.eventservice.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@AllArgsConstructor @NoArgsConstructor @Getter @Setter
-@Builder
+@Table(name = "event_categories")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class EventCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long eventCategoryId;
-    private Long eventId;
-    private Long categoryId;
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id", nullable = false)
+    private Event event;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 }

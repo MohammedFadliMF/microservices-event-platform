@@ -1,4 +1,4 @@
-package com.net.paymentservice.exceptions;
+package com.net.paymentservice.interceptors;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;

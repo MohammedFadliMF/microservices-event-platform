@@ -1,23 +1,70 @@
 package com.net.eventservice.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.net.eventservice.enums.EventStatus;
+import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
-@NoArgsConstructor @AllArgsConstructor @Getter @Setter
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long eventId;
+    private Long id;
+
+    @Column(nullable = false)
     private String title;
+
+    @Column(length = 2000)
     private String description;
-    private LocalDate eventDate;
+
+    @Column(nullable = false)
+    private LocalDateTime eventDate;
+
+    @Column(nullable = false)
     private String location;
-    private int capacity;
-    private Long organizerId;
+
+    @Column(nullable = false)
+    private Integer capacity;
+
+    @Column(nullable = false)
+    private String organizerKeycloakId;
+
+    @Column(nullable = false)
+    private Double price;
+
+    private Integer availableTickets;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private EventStatus status = EventStatus.ACTIVE;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventCategory> eventCategories = new ArrayList<>();
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        if (availableTickets == null) {
+            availableTickets = capacity;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }
