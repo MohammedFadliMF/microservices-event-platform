@@ -30,20 +30,16 @@ public class SecurityConfig {
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(ar -> ar
-                                                .requestMatchers("/actuator/**").permitAll()
-                                                .requestMatchers("/actuator/health/**").permitAll()
-                                                .requestMatchers(
-                                                                "/swagger-ui/**",
-                                                                "/swagger-ui.html",
-                                                                "/v3/api-docs/**",
-                                                                "/v3/api-docs")
-                                                .permitAll()
-                                                // Allow GET requests to endpoints without authentication
-                                                .requestMatchers("GET", "/api/tickets", "/api/tickets/**").permitAll()
-                                                .requestMatchers("GET", "/api/categories", "/api/categories/**")
-                                                .permitAll()
-                                                // All other requests require authentication
-                                                .anyRequest().authenticated())
+                                        .requestMatchers("/actuator/**").permitAll()
+                                        .requestMatchers("/actuator/health/**").permitAll()
+                                        .requestMatchers(
+                                                "/swagger-ui/**",
+                                                "/swagger-ui.html",
+                                                "/v3/api-docs/**",
+                                                "/v3/api-docs")
+                                        .permitAll()
+                                        // All other requests require authentication
+                                        .anyRequest().authenticated())
                                 .oauth2ResourceServer(oauth2 -> oauth2
                                                 .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter)))
                                 .build();

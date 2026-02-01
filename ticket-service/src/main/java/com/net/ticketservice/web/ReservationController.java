@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +25,8 @@ public class ReservationController {
     private final ReservationService reservationService;
 
     @PostMapping
-    @Operation(summary = "Create a new reservation")
+    @PreAuthorize("hasAnyAuthority('USER', 'ORGANIZER', 'ADMIN')")
+    @Operation(summary = "Create a new reservation ( User, Organizer, Admin )")
     public ResponseEntity<ReservationDTO> createReservation(
             @Valid @RequestBody CreateReservationRequest request,
             @AuthenticationPrincipal Jwt jwt) {
@@ -35,21 +37,24 @@ public class ReservationController {
     }
 
     @PatchMapping("/{id}/confirm")
-    @Operation(summary = "Confirm a reservation")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'ORGANIZER')")
+    @Operation(summary = "Confirm a reservation ( Admin, Organizer )")
     public ResponseEntity<ReservationDTO> confirmReservation(@PathVariable Long id) {
         ReservationDTO reservation = reservationService.confirmReservation(id);
         return ResponseEntity.ok(reservation);
     }
 
     @PatchMapping("/{id}/cancel")
-    @Operation(summary = "Cancel a reservation")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
+    @Operation(summary = "Cancel a reservation ( User, Admin )")
     public ResponseEntity<Void> cancelReservation(@PathVariable Long id) {
         reservationService.cancelReservation(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/my-reservations")
-    @Operation(summary = "Get user's reservations")
+    @PreAuthorize("hasAnyAuthority('USER', 'ORGANIZER', 'ADMIN')")
+    @Operation(summary = "Get user's reservations ( User, Organizer, Admin )")
     public ResponseEntity<List<ReservationDTO>> getUserReservations(@AuthenticationPrincipal Jwt jwt) {
         String userKeycloakId = jwt.getSubject();
         List<ReservationDTO> reservations = reservationService.getUserReservations(userKeycloakId);
@@ -57,14 +62,16 @@ public class ReservationController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get reservation by ID")
+    @PreAuthorize("hasAnyAuthority('USER', 'ORGANIZER', 'ADMIN')")
+    @Operation(summary = "Get reservation by ID ( User, Organizer, Admin )")
     public ResponseEntity<ReservationDTO> getReservationById(@PathVariable Long id) {
         ReservationDTO reservation = reservationService.getReservationById(id);
         return ResponseEntity.ok(reservation);
     }
 
     @GetMapping("/event/{eventId}")
-    @Operation(summary = "Get reservations for an event")
+    @PreAuthorize("hasAnyAuthority('ORGANIZER', 'ADMIN')")
+    @Operation(summary = "Get reservations for an event (ORGANIZER, ADMIN )")
     public ResponseEntity<List<ReservationDTO>> getEventReservations(@PathVariable Long eventId) {
         List<ReservationDTO> reservations = reservationService.getEventReservations(eventId);
         return ResponseEntity.ok(reservations);
