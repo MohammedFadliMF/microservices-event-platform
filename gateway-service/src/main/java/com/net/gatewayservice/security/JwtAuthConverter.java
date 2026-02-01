@@ -15,11 +15,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**
- * Convertisseur JWT réactif pour Gateway
- * Extrait les rôles depuis realm_access.roles et crée un token
- * d'authentification
- */
 @Component
 public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationToken> {
     private final JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
@@ -33,9 +28,6 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
         return new JwtAuthenticationToken(jwt, authorities, jwt.getClaim("preferred_username"));
     }
 
-    /**
-     * Extrait les rôles depuis realm_access.roles dans le token JWT
-     */
     private Collection<GrantedAuthority> extractResourceRoles(Jwt jwt) {
         Map<String, Object> realmAccess;
         Collection<String> roles;
