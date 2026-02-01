@@ -21,19 +21,18 @@ import java.util.List;
 @RequestMapping("/api/events")
 @RequiredArgsConstructor
 @Tag(name = "Events", description = "Event management APIs")
-//@SecurityRequirement(name = "bearer-jwt")
+@SecurityRequirement(name = "bearer-jwt")
 public class EventController {
 
     private final EventService eventService;
 
     @PostMapping
-    @Operation(summary = "Create a new event")
-    @PreAuthorize("hasAuthority('ORGANIZER')")
+    @Operation(summary = "Create a new event ( ORGANIZER, ADMIN )")
+    @PreAuthorize("hasAnyAuthority('ORGANIZER', 'ADMIN')")
     public ResponseEntity<EventDTO> createEvent(
             @Valid @RequestBody CreateEventRequest request,
-            Authentication authentication) {
+            @AuthenticationPrincipal Jwt jwt) {
 
-        Jwt jwt = (Jwt) authentication.getCredentials();
         String organizerKeycloakId = jwt.getSubject();
 
         EventDTO event = eventService.createEvent(request, organizerKeycloakId);
@@ -41,7 +40,8 @@ public class EventController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update an event")
+    @PreAuthorize("hasAnyAuthority('ORGANIZER', 'ADMIN')")
+    @Operation(summary = "Update an event ( ORGANIZER, ADMIN )")
     public ResponseEntity<EventDTO> updateEvent(
             @PathVariable Long id,
             @Valid @RequestBody UpdateEventRequest request,
@@ -53,27 +53,24 @@ public class EventController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get event by ID")
+    @PreAuthorize("permitAll()")
+    @Operation(summary = "Get event by ID ( permitAll )")
     public ResponseEntity<EventDTO> getEventById(@PathVariable Long id) {
         EventDTO event = eventService.getEventById(id);
         return ResponseEntity.ok(event);
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ORGANIZER')")
-    @Operation(summary = "Get all events")
+    @PreAuthorize("permitAll()")
+    @Operation(summary = "Get all events ( permitAll )")
     public ResponseEntity<List<EventDTO>> getAllEvents() {
         List<EventDTO> events = eventService.getAllEvents();
         return ResponseEntity.ok(events);
     }
-//    @GetMapping
-//    @PreAuthorize("hasAuthority('ORGANIZER')")
-//    public List<Event> countEvents() {
-//        return eventRepository.findAll();
-//    }
 
     @GetMapping("/my-events")
-    @Operation(summary = "Get events by organizer")
+    @PreAuthorize("hasAuthority('ORGANIZER')")
+    @Operation(summary = "Get events by organizer ( ORGANIZER )")
     public ResponseEntity<List<EventDTO>> getMyEvents(@AuthenticationPrincipal Jwt jwt) {
         String organizerKeycloakId = jwt.getSubject();
         List<EventDTO> events = eventService.getEventsByOrganizer(organizerKeycloakId);
@@ -81,14 +78,16 @@ public class EventController {
     }
 
     @PostMapping("/search")
-    @Operation(summary = "Search events")
+    @PreAuthorize("permitAll()")
+    @Operation(summary = "Search events ( permitAll )")
     public ResponseEntity<List<EventDTO>> searchEvents(@RequestBody EventSearchRequest searchRequest) {
         List<EventDTO> events = eventService.searchEvents(searchRequest);
         return ResponseEntity.ok(events);
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete an event")
+    @PreAuthorize("hasAnyAuthority('ORGANIZER', 'ADMIN')")
+    @Operation(summary = "Delete an event ( ORGANIZER, ADMIN )")
     public ResponseEntity<Void> deleteEvent(
             @PathVariable Long id,
             @AuthenticationPrincipal Jwt jwt) {
@@ -99,7 +98,8 @@ public class EventController {
     }
 
     @PatchMapping("/{id}/tickets")
-    @Operation(summary = "Update available tickets")
+    @PreAuthorize("hasAnyAuthority('ORGANIZER', 'ADMIN')")
+    @Operation(summary = "Update available tickets ( ORGANIZER, ADMIN )")
     public ResponseEntity<Boolean> updateAvailableTickets(
             @PathVariable Long id,
             @RequestParam int quantity) {
@@ -107,9 +107,10 @@ public class EventController {
         boolean updated = eventService.updateAvailableTickets(id, quantity);
         return ResponseEntity.ok(updated);
     }
-    @GetMapping("/auth")
-    public Authentication authentication(Authentication authentication) {
-        return authentication;
-    }
+
+//    @GetMapping("/auth")
+//    public Authentication authentication(Authentication authentication) {
+//        return authentication;
+//    }
 
 }

@@ -23,29 +23,32 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping("/process")
-    @Operation(summary = "Process a payment")
+    @PreAuthorize("hasAnyAuthority('USER', 'ORGANIZER', 'ADMIN')")
+    @Operation(summary = "Process a payment (User, Organizer, Admin)")
     public ResponseEntity<PaymentDTO> processPayment(@Valid @RequestBody ProcessPaymentRequest request) {
         PaymentDTO payment = paymentService.processPayment(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(payment);
     }
 
     @PostMapping("/{id}/refund")
-    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('ORGANIZER')")
-    @Operation(summary = "Refund a payment")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'ORGANIZER')")
+    @Operation(summary = "Refund a payment (Admin, Organizer)")
     public ResponseEntity<PaymentDTO> refundPayment(@PathVariable Long id) {
         PaymentDTO payment = paymentService.refundPayment(id);
         return ResponseEntity.ok(payment);
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get payment by ID")
+    @PreAuthorize("hasAnyAuthority('USER', 'ORGANIZER', 'ADMIN')")
+    @Operation(summary = "Get payment by ID (User, Organizer, Admin)")
     public ResponseEntity<PaymentDTO> getPaymentById(@PathVariable Long id) {
         PaymentDTO payment = paymentService.getPaymentById(id);
         return ResponseEntity.ok(payment);
     }
 
     @GetMapping("/reservation/{reservationId}")
-    @Operation(summary = "Get payment by reservation ID")
+    @PreAuthorize("hasAnyAuthority('USER', 'ORGANIZER', 'ADMIN')")
+    @Operation(summary = "Get payment by reservation ID (User, Organizer, Admin)")
     public ResponseEntity<PaymentDTO> getPaymentByReservationId(@PathVariable Long reservationId) {
         PaymentDTO payment = paymentService.getPaymentByReservationId(reservationId);
         return ResponseEntity.ok(payment);
