@@ -16,7 +16,7 @@ import java.util.List;
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor
 @Tag(name = "Categories", description = "Category management APIs")
-//@SecurityRequirement(name = "bearer-jwt")
+@SecurityRequirement(name = "bearer-jwt")
 public class CategoryController {
 
     private final CategoryService categoryService;
@@ -40,14 +40,16 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get category by ID")
+    @Operation(summary = "Get category by ID ( permitAll )")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<CategoryDTO> getCategoryById(@PathVariable Long id) {
         CategoryDTO category = categoryService.getCategoryById(id);
         return ResponseEntity.ok(category);
     }
 
     @GetMapping
-    @Operation(summary = "Get all categories")
+    @Operation(summary = "Get all categories ( permitAll )")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<List<CategoryDTO>> getAllCategories() {
         List<CategoryDTO> categories = categoryService.getAllCategories();
         return ResponseEntity.ok(categories);

@@ -32,7 +32,7 @@ public class SecurityConfig {
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(ar -> ar
-                                                .requestMatchers("/api/events/auth").permitAll()
+//                                                .requestMatchers("/api/events/auth").permitAll()
                                                 .requestMatchers("/actuator/**").permitAll()
                                                 .requestMatchers("/actuator/health/**").permitAll()
                                                 .requestMatchers(
@@ -40,11 +40,6 @@ public class SecurityConfig {
                                                                 "/swagger-ui.html",
                                                                 "/v3/api-docs/**",
                                                                 "/v3/api-docs")
-                                                .permitAll()
-                                                // Allow GET requests to /api/events without authentication
-                                                .requestMatchers("GET", "/api/events", "/api/events/**").permitAll()
-                                                // Allow GET requests to /api/v1/events without authentication
-                                                .requestMatchers("GET", "/api/v1/events", "/api/v1/events/**")
                                                 .permitAll()
                                                 // All other requests require authentication
                                                 .anyRequest().authenticated())
